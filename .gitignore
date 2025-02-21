@@ -1,0 +1,12 @@
+# Ignore log directories and migrations
+logs/
+migrations/
+
+# Ignore environment files
+.env
+
+# Ignore __pycache__directories
+**/__pycache__/
+
+# Ignore additional specific files and directories
+*.pyc

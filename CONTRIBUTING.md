@@ -7,7 +7,7 @@ Thank you for considering contributing to PROJECT S.L.I.C.E! This guide provides
 1. **Fork the Repository:** Click on "Fork" button in the upper right corner.
 2. **Clone the Repository:** On your terminal, clone the repository using:
    ```sh
-   git clone https://github.com/seu-usuario/[project-name]. git
+   git clone https://github.com/your-user/[project-name]. git
    cd [project name]
 3. Set Up the Project - Follow the installation steps in the [Installation](./README.md#-installation)
 ## Reporting Problems

@@ -17,6 +17,7 @@ DATABASE = {
                 "aerich.models",
                 "src.modules.administration.models",
                 "src.modules.automation.models",
+                "src.modules.engagement.models"
             ],
             "default_connection": "default",
         }

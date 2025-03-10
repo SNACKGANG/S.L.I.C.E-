@@ -35,6 +35,10 @@ from src.modules.automation.usecases.sales_fetch_usecase import \
 from src.modules.automation.usecases.sales_send_usecase import SalesSendUseCase
 from src.modules.automation.views.holder_verification_view import \
     HolderVerificationButtonView
+from src.modules.engagement.cogs.currency_cog import CurrencyCog
+from src.modules.engagement.controllers.currency_controller import CurrencyController
+from src.modules.engagement.repositories.currency_repository import CurrencyRepository
+from src.modules.engagement.usecases.currency_usecase import CurrencyUseCase
 from src.modules.moderation.cogs.captcha_verification_config import \
     CaptchaConfigCog
 from src.modules.moderation.controllers.captcha_controller import \
@@ -123,6 +127,11 @@ class MyBot(commands.Bot):
             holder_fetch_all_usecase=self.holder_verification_usecase[1],
         )
 
+        # CURRENCY
+        self.currency_repository = CurrencyRepository()
+        self.currency_use_case = CurrencyUseCase(self.currency_repository)
+        self.currency_controller = CurrencyController(self.currency_use_case)
+
     async def setup_hook(self) -> None:
         logger.info("Setting up database and logging...")
         await Tortoise.init(config=DATABASE)
@@ -135,6 +144,7 @@ class MyBot(commands.Bot):
         logger.info("Loading cogs and views...")
         await self.add_cog(CaptchaConfigCog(self, self.captcha_verification_controller))
         await self.add_cog(SalesConfigCog(self, self.sales_controller))
+        await self.add_cog(CurrencyCog(self, self.currency_controller))
         await self.add_cog(
             HolderVerificationCog(
                 self,

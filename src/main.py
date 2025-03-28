@@ -54,6 +54,7 @@ from src.modules.engagement.usecases.reward_usecase import RewardUseCase
 from src.modules.engagement.views.coin_shop_buyitem_view import ButtonView
 from src.modules.moderation.cogs.captcha_verification_config import \
     CaptchaConfigCog
+from src.modules.moderation.cogs.role_management_cog import RoleManagementCog
 from src.modules.moderation.controllers.captcha_controller import \
     CaptchaController
 from src.modules.moderation.repositories.captcha_repository import \
@@ -199,6 +200,8 @@ class MyBot(commands.Bot):
         await self.add_cog(RewardCog(self, self.reward_controller))
         await self.add_cog(MysteryBoxCog(self, self.mystery_box_controller, reward_controller=self.reward_controller))
         await self.add_cog(CoinShopCog(self, self.coin_shop_controller))
+        await self.add_cog(RoleManagementCog(self))
+
         # CAPTCHA
         self.add_view(
             VerificationButtonView(

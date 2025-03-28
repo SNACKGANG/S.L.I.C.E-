@@ -15,9 +15,11 @@ from src.modules.administration.repositories.guild_config_repository import \
 from src.modules.automation.cogs.holder_verification_cog import \
     HolderVerificationCog
 from src.modules.automation.cogs.sales_config_cog import SalesConfigCog
+from src.modules.automation.cogs.scheduled_webhook_cog import ScheduledWebhookCog
 from src.modules.automation.controllers.holder_verification_controller import \
     HolderVerificationController
 from src.modules.automation.controllers.sales_controller import SalesController
+from src.modules.automation.controllers.scheduled_webhook_controller import ScheduledWebhookController
 from src.modules.automation.repositories.holder_verification_config_repository import \
     HolderConfigRepository
 from src.modules.automation.repositories.holder_verification_repository import \
@@ -34,6 +36,7 @@ from src.modules.automation.usecases.holder_verification_usecase import \
 from src.modules.automation.usecases.sales_fetch_usecase import \
     SalesFetchUseCase
 from src.modules.automation.usecases.sales_send_usecase import SalesSendUseCase
+from src.modules.automation.usecases.scheduled_webhook_usecase import ScheduledWebhookUseCase
 from src.modules.automation.views.holder_verification_view import \
     HolderVerificationButtonView
 from src.modules.engagement.cogs.coin_shop_cog import CoinShopCog
@@ -177,6 +180,10 @@ class MyBot(commands.Bot):
 
         self.coin_shop_controller = CoinShopController(self.coin_shop_use_case)
 
+        # WEBHOOK
+        self.scheduled_webhook_usecase = ScheduledWebhookUseCase(self.discord_service)
+        self.scheduled_webhook_controller = ScheduledWebhookController(self.scheduled_webhook_usecase)
+
     async def setup_hook(self) -> None:
         logger.info("Setting up database and logging...")
         await Tortoise.init(config=DATABASE)
@@ -205,6 +212,7 @@ class MyBot(commands.Bot):
         await self.add_cog(RoleManagementCog(self))
         await self.add_cog(ThreadManagerCog(self))
         await self.add_cog(EmojiManagerCog(self))
+        await self.add_cog(ScheduledWebhookCog(self, self.scheduled_webhook_controller))
         # CAPTCHA
         self.add_view(
             VerificationButtonView(

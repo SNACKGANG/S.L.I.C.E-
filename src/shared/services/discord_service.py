@@ -115,3 +115,11 @@ class DiscordService:
         if allowed_role_id:
             return await DiscordService.has_required_role(user, allowed_role_id)
         return True
+
+    async def get_webhook_url(self, channel_id: int):
+        channel = self.client.get_channel(channel_id)
+        webhooks = await channel.webhooks()
+        if webhooks:
+            return webhooks[0].url
+        else:
+            raise ValueError(f"No webhook found for channel {channel.id}")

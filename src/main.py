@@ -9,14 +9,17 @@ from tortoise import Tortoise
 from src.infrastructure.logging import LoguruConfig
 from src.infrastructure.settings import (DATABASE, DISCORD_BOT_TOKEN,
                                          RESERVOIR_API_KEY)
+from src.modules.administration.models import Users
 from src.modules.administration.repositories.guild_config_repository import \
     GuildConfigRepository
 from src.modules.automation.cogs.holder_verification_cog import \
     HolderVerificationCog
 from src.modules.automation.cogs.sales_config_cog import SalesConfigCog
+from src.modules.automation.cogs.scheduled_webhook_cog import ScheduledWebhookCog
 from src.modules.automation.controllers.holder_verification_controller import \
     HolderVerificationController
 from src.modules.automation.controllers.sales_controller import SalesController
+from src.modules.automation.controllers.scheduled_webhook_controller import ScheduledWebhookController
 from src.modules.automation.repositories.holder_verification_config_repository import \
     HolderConfigRepository
 from src.modules.automation.repositories.holder_verification_repository import \
@@ -33,14 +36,30 @@ from src.modules.automation.usecases.holder_verification_usecase import \
 from src.modules.automation.usecases.sales_fetch_usecase import \
     SalesFetchUseCase
 from src.modules.automation.usecases.sales_send_usecase import SalesSendUseCase
+from src.modules.automation.usecases.scheduled_webhook_usecase import ScheduledWebhookUseCase
 from src.modules.automation.views.holder_verification_view import \
     HolderVerificationButtonView
+from src.modules.engagement.cogs.coin_shop_cog import CoinShopCog
 from src.modules.engagement.cogs.currency_cog import CurrencyCog
+from src.modules.engagement.cogs.mystery_box_cog import MysteryBoxCog
+from src.modules.engagement.cogs.reward_cog import RewardCog
+from src.modules.engagement.controllers.coin_shop_controller import CoinShopController
 from src.modules.engagement.controllers.currency_controller import CurrencyController
+from src.modules.engagement.controllers.mystery_box_controller import MysteryBoxController
+from src.modules.engagement.controllers.reward_controller import RewardController
 from src.modules.engagement.repositories.currency_repository import CurrencyRepository
+from src.modules.engagement.repositories.mystery_box_repository import MysteryBoxRepository
+from src.modules.engagement.repositories.reward_repository import RewardRepository
+from src.modules.engagement.usecases.coin_shop_usecase import CoinShopUseCase
 from src.modules.engagement.usecases.currency_usecase import CurrencyUseCase
+from src.modules.engagement.usecases.mystery_box_usecase import MysteryBoxUseCase
+from src.modules.engagement.usecases.reward_usecase import RewardUseCase
+from src.modules.engagement.views.coin_shop_buyitem_view import ButtonView
 from src.modules.moderation.cogs.captcha_verification_config import \
     CaptchaConfigCog
+from src.modules.moderation.cogs.emoji_config_cog import EmojiManagerCog
+from src.modules.moderation.cogs.role_management_cog import RoleManagementCog
+from src.modules.moderation.cogs.thread_config_cog import ThreadManagerCog
 from src.modules.moderation.controllers.captcha_controller import \
     CaptchaController
 from src.modules.moderation.repositories.captcha_repository import \
@@ -57,6 +76,7 @@ from src.modules.moderation.views.captcha_button_view import \
 from src.shared.services.discord_service import DiscordService
 from src.shared.services.http_client import AioHttpClient
 from src.shared.services.reservoir_service import ReservoirService
+from src.modules.engagement.repositories import PurchaseHistoryRepository, ShopItemRepository, ShopRepository, ItemRepository
 
 
 class MyBot(commands.Bot):
@@ -132,9 +152,43 @@ class MyBot(commands.Bot):
         self.currency_use_case = CurrencyUseCase(self.currency_repository)
         self.currency_controller = CurrencyController(self.currency_use_case)
 
+        # REWARD
+        self.reward_repository = RewardRepository()
+        self.reward_use_case = RewardUseCase(self.reward_repository)
+        self.reward_controller = RewardController(use_case=self.reward_use_case, currency_controller=self.currency_controller)
+
+        # MYSTERY BOX
+        self.mystery_box_repository = MysteryBoxRepository()
+        self.mystery_box_use_case = MysteryBoxUseCase(repository=self.mystery_box_repository, reward_repository=self.reward_repository)
+        self.mystery_box_controller = MysteryBoxController(self.mystery_box_use_case, currency_controller=self.currency_controller)
+
+        # COIN SHOP
+        self.coin_shop_repository = ShopRepository()
+        self.shop_item_repository = ShopItemRepository()
+        self.item_repository = ItemRepository()
+        self.purchase_history_repository = PurchaseHistoryRepository()
+
+        self.coin_shop_use_case = CoinShopUseCase(
+            shop_repository=self.coin_shop_repository,
+            shop_item_repository=self.shop_item_repository,
+            purchase_history_repository=self.purchase_history_repository,
+            discord_service=self.discord_service,
+            currency_repository=self.currency_repository,
+            item_repository=self.item_repository,
+            bot=self
+        )
+
+        self.coin_shop_controller = CoinShopController(self.coin_shop_use_case)
+
+        # WEBHOOK
+        self.scheduled_webhook_usecase = ScheduledWebhookUseCase(self.discord_service)
+        self.scheduled_webhook_controller = ScheduledWebhookController(self.scheduled_webhook_usecase)
+
     async def setup_hook(self) -> None:
         logger.info("Setting up database and logging...")
         await Tortoise.init(config=DATABASE)
+        await Tortoise.generate_schemas()
+
         logger.success("Database initialized successfully.")
 
         log_config = LoguruConfig()
@@ -152,7 +206,13 @@ class MyBot(commands.Bot):
                 self.holder_verification_config_repository,
             )
         )
-
+        await self.add_cog(RewardCog(self, self.reward_controller))
+        await self.add_cog(MysteryBoxCog(self, self.mystery_box_controller, reward_controller=self.reward_controller))
+        await self.add_cog(CoinShopCog(self, self.coin_shop_controller))
+        await self.add_cog(RoleManagementCog(self))
+        await self.add_cog(ThreadManagerCog(self))
+        await self.add_cog(EmojiManagerCog(self))
+        await self.add_cog(ScheduledWebhookCog(self, self.scheduled_webhook_controller))
         # CAPTCHA
         self.add_view(
             VerificationButtonView(
@@ -165,6 +225,12 @@ class MyBot(commands.Bot):
 
         await self.holder_verification_service.start_worker()
 
+        # COIN Shop
+        shop_ids = await self.coin_shop_repository.get_all_shop_ids()
+        coin_shop_view_button = ButtonView(self, self.coin_shop_use_case)
+        await coin_shop_view_button.initialize_buttons(shop_ids)
+        self.add_view(coin_shop_view_button)
+
     async def on_ready(self):
         await self.wait_until_ready()
         logger.info("Bot is ready. Starting periodic tasks and syncing commands...")
@@ -174,6 +240,23 @@ class MyBot(commands.Bot):
         for guild in self.guilds:
             await GuildConfigRepository.add_guild(guild.id, guild.name)
         logger.success("Guilds added to the database successfully.")
+
+    @staticmethod
+    async def on_guild_join(guild):
+        for member in guild.members:
+            user = await Users.filter(user_id=member.id, guild_id=guild.id).first()
+            if not user:
+                await Users.create(user_id=member.id, guild_id=guild.id)
+
+    @staticmethod
+    async def on_member_join(member):
+        user = await Users.filter(user_id=member.id, guild_id=member.guild.id).first()
+        if not user:
+            await Users.create(user_id=member.id, guild_id=member.guild.id)
+
+    @staticmethod
+    async def on_member_remove(member):
+        await Users.filter(user_id=member.id, guild_id=member.guild.id).delete()
 
     async def sync_commands(self):
         logger.info("Syncing commands...")

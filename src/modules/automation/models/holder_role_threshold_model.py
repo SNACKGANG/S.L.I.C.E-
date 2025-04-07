@@ -3,7 +3,7 @@ from tortoise import fields, models
 
 class HolderRoleThresholdModel(models.Model):
     """
-    Model representing the role assigned based on NFT quantity thresholds.
+    Model representing the role assigned based on NFT item_quantity thresholds.
     """
 
     id = fields.IntField(pk=True)

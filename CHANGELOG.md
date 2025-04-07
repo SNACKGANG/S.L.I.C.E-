@@ -1,27 +1,22 @@
 # Changelog  
+All notable changes to this project will be documented in this file.
 
-All notable changes to this project will be documented in this file.  
+## [Unreleased]
 
-## [Unreleased]  
 ### Added  
-- Example of a new feature  
+- Placeholder for future features
+
+---
+
+## [0.2.0] - 2025-04-07
+
+### Added  
+- 🎁 Mystery-Box System: Users can open mystery boxes to receive random rewards  
+- 🪙 Coin-Shop System: Users can purchase items or roles with coins  
+- 👥 Bulk Role Management: Mass role assignment and removal  
+- 📌 Auto Thread Creator: Auto-creates threads in specific channels  
+- 😄 Auto Emoji Reactor: Auto-reacts with emojis to messages  
+- ⏰ Scheduled Webhooks: Send pre-configured webhook messages on a schedule  
 
 ### Changed  
-- Example of a change to an existing feature  
-
-### Deprecated  
-- Example of a feature that will be deprecated  
-
-### Removed  
-- Example of a removed feature  
-
-### Fixed  
-- Example of a bug fix  
-
-### Security  
-- Example of a security update  
-
-
-
-
-
+- 📝 README updated with full feature list  

@@ -166,15 +166,28 @@ Once everything is set up, you can start the bot with:
 poetry run python -m src.main
 ```
 ---
-## ✨ Features
+
+### ✨ Features
 
 Highlight the key features of the project:
 
-- ✅ Captcha Verification (Moderation): Verification system for new members to prevent bots and fake accounts.
+✅ **Captcha Verification (Moderation):** Verification system for new members to prevent bots and fake accounts.
 
-- 🔔 NFT Sales Notifications (Automation): Notifies the server about NFT sales on OpenSea, including details like price, buyer, seller, and image.
+🔔 **NFT Sales Notifications (Automation):** Notifies the server about NFT sales on OpenSea, including details like price, buyer, seller, and image.
 
-- 🔐  Holder Verification (Engagement): New members verify ownership of an NFT by signing a wallet message. Upon successful verification, they receive the "Holder" role, granting full access to the token-gated server.
+🔐 **Holder Verification (Engagement):** New members verify ownership of an NFT by signing a wallet message. Upon successful verification, they receive the "Holder" role, granting full access to the token-gated server.
+
+🎁 **Mystery-Box System (Gamification):** Users can open mystery boxes and receive random rewards, enhancing engagement and activity.
+
+🛒 **Coin-Shop System (Economy):** Shop where users can spend earned coins to purchase items, perks, or roles.
+
+👥 **Bulk Role Management (Moderation):** Easily add or remove roles from multiple members at once.
+
+📌 **Auto Thread Creator (Automation):** Automatically creates threads when users send messages in specific channels.
+
+😄 **Auto Emoji Reactor (Automation):** Automatically reacts with predefined emojis to messages in selected channels.
+
+⏰ **Scheduled Webhooks (Automation):** Sends pre-configured webhook messages on a defined schedule.
 
 ## 🤝 Contributing
 
